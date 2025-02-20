@@ -1,7 +1,7 @@
 use rand::prelude::*;
 
 
-const SIZE: usize = 100000;
+const COUNT: usize = 100000;
 const BLOCK_SIZE: usize = 64;
 
 
@@ -29,7 +29,7 @@ fn test_std() -> Result<(), std::io::Error> {
 
     // Case 1. Push bytes
     let tm = std::time::Instant::now();
-    for _ in 0..SIZE {
+    for _ in 0..COUNT {
         let block = rng.random::<[u8; BLOCK_SIZE]>();
         file.seek(std::io::SeekFrom::End(0))?;
         file.write_all(&block)?;
@@ -41,7 +41,7 @@ fn test_std() -> Result<(), std::io::Error> {
     let tm = std::time::Instant::now();
     file.seek(std::io::SeekFrom::Start(0))?;
     let mut block = [0u8; BLOCK_SIZE];
-    for _ in 0..SIZE {
+    for _ in 0..COUNT {
         file.read_exact(&mut block)?;
     }
     println!("Case 2. Iterate blocks:\t{:?}", tm.elapsed());
@@ -49,8 +49,8 @@ fn test_std() -> Result<(), std::io::Error> {
     // Case 3. Random read
     let tm = std::time::Instant::now();
     let mut block = [0u8; BLOCK_SIZE];
-    for _ in 0..SIZE {
-        let pos = rng.random_range(0..SIZE) as u64;
+    for _ in 0..COUNT {
+        let pos = rng.random_range(0..COUNT) as u64;
         file.seek(std::io::SeekFrom::Start(pos * BLOCK_SIZE as u64))?;
         file.read_exact(&mut block)?;
     }
@@ -58,9 +58,9 @@ fn test_std() -> Result<(), std::io::Error> {
 
     // Case 4. Random update
     let tm = std::time::Instant::now();
-    for _ in 0..SIZE {
+    for _ in 0..COUNT {
         let block = rng.random::<[u8; BLOCK_SIZE]>();
-        let pos = rng.random_range(0..SIZE) as u64;
+        let pos = rng.random_range(0..COUNT) as u64;
         file.seek(std::io::SeekFrom::Start(pos * BLOCK_SIZE as u64))?;
         file.write_all(&block)?;
         file.flush()?;
@@ -99,7 +99,7 @@ fn test_std_ext() -> Result<(), std::io::Error> {
     // Case 1. Push bytes
     let tm = std::time::Instant::now();
     let mut pos = 0;
-    for _ in 0..SIZE {
+    for _ in 0..COUNT {
         let block = rng.random::<[u8; BLOCK_SIZE]>();
         file.write_all_at(&block, pos)?;
         pos += BLOCK_SIZE as u64;
@@ -110,7 +110,7 @@ fn test_std_ext() -> Result<(), std::io::Error> {
     let tm = std::time::Instant::now();
     let mut block = [0u8; BLOCK_SIZE];
     let mut pos = 0;
-    for _ in 0..SIZE {
+    for _ in 0..COUNT {
         file.read_exact_at(&mut block, pos)?;
         pos += BLOCK_SIZE as u64;
     }
@@ -119,17 +119,17 @@ fn test_std_ext() -> Result<(), std::io::Error> {
     // Case 3. Random read
     let tm = std::time::Instant::now();
     let mut block = [0u8; BLOCK_SIZE];
-    for _ in 0..SIZE {
-        let pos = rng.random_range(0..SIZE) as u64;
+    for _ in 0..COUNT {
+        let pos = rng.random_range(0..COUNT) as u64;
         file.read_exact_at(&mut block, pos)?;
     }
     println!("Case 3. Random read:\t{:?}", tm.elapsed());
 
     // Case 4. Random update
     let tm = std::time::Instant::now();
-    for _ in 0..SIZE {
+    for _ in 0..COUNT {
         let block = rng.random::<[u8; BLOCK_SIZE]>();
-        let pos = rng.random_range(0..SIZE) as u64;
+        let pos = rng.random_range(0..COUNT) as u64;
         file.write_all_at(&block, pos)?;
     }
     println!("Case 4. Random update:\t{:?}", tm.elapsed());
@@ -169,7 +169,7 @@ fn test_tokio() -> Result<(), std::io::Error> {
 
         // Case 1. Push bytes
         let tm = std::time::Instant::now();
-        for _ in 0..SIZE {
+        for _ in 0..COUNT {
             let block = rng.random::<[u8; BLOCK_SIZE]>();
             file.seek(std::io::SeekFrom::End(0)).await?;
             file.write_all(&block).await?;
@@ -181,7 +181,7 @@ fn test_tokio() -> Result<(), std::io::Error> {
         let tm = std::time::Instant::now();
         file.seek(std::io::SeekFrom::Start(0)).await?;
         let mut block = [0u8; BLOCK_SIZE];
-        for _ in 0..SIZE {
+        for _ in 0..COUNT {
             file.read_exact(&mut block).await?;
         }
         println!("Case 2. Iterate blocks:\t{:?}", tm.elapsed());
@@ -189,8 +189,8 @@ fn test_tokio() -> Result<(), std::io::Error> {
         // Case 3. Random read
         let tm = std::time::Instant::now();
         let mut block = [0u8; BLOCK_SIZE];
-        for _ in 0..SIZE {
-            let pos = rng.random_range(0..SIZE) as u64;
+        for _ in 0..COUNT {
+            let pos = rng.random_range(0..COUNT) as u64;
             file.seek(std::io::SeekFrom::Start(pos * BLOCK_SIZE as u64)).await?;
             file.read_exact(&mut block).await?;
         }
@@ -198,9 +198,9 @@ fn test_tokio() -> Result<(), std::io::Error> {
 
         // Case 4. Random update
         let tm = std::time::Instant::now();
-        for _ in 0..SIZE {
+        for _ in 0..COUNT {
             let block = rng.random::<[u8; BLOCK_SIZE]>();
-            let pos = rng.random_range(0..SIZE) as u64;
+            let pos = rng.random_range(0..COUNT) as u64;
             file.seek(std::io::SeekFrom::Start(pos * BLOCK_SIZE as u64)).await?;
             file.write_all(&block).await?;
             file.flush().await?;
@@ -240,7 +240,7 @@ fn test_tokio_uring() -> Result<(), std::io::Error> {
         // Case 1. Push bytes
         let tm = std::time::Instant::now();
         let mut pos = 0;
-        for _ in 0..SIZE {
+        for _ in 0..COUNT {
             let block = rng.random::<[u8; BLOCK_SIZE]>().to_vec();
             let (res, _) = file.write_all_at(block, pos).await;
             res?;
@@ -252,7 +252,7 @@ fn test_tokio_uring() -> Result<(), std::io::Error> {
         let tm = std::time::Instant::now();
         let block = vec![0u8; BLOCK_SIZE];
         let mut pos = 0;
-        for _ in 0..SIZE {
+        for _ in 0..COUNT {
             let (res, _block) = file.read_exact_at(block.clone(), pos).await;
             res?;
             pos += BLOCK_SIZE as u64;
@@ -262,8 +262,8 @@ fn test_tokio_uring() -> Result<(), std::io::Error> {
         // Case 3. Random read
         let tm = std::time::Instant::now();
         let block = vec![0u8; BLOCK_SIZE];
-        for _ in 0..SIZE {
-            let pos = rng.random_range(0..SIZE) as u64;
+        for _ in 0..COUNT {
+            let pos = rng.random_range(0..COUNT) as u64;
             let (res, _block) = file.read_exact_at(block.clone(), pos).await;
             res?;
         }
@@ -271,9 +271,9 @@ fn test_tokio_uring() -> Result<(), std::io::Error> {
 
         // Case 4. Random update
         let tm = std::time::Instant::now();
-        for _ in 0..SIZE {
+        for _ in 0..COUNT {
             let block = rng.random::<[u8; BLOCK_SIZE]>().to_vec();
-            let pos = rng.random_range(0..SIZE) as u64;
+            let pos = rng.random_range(0..COUNT) as u64;
             let (res, _) = file.write_all_at(block, pos).await;
             res?;
         }

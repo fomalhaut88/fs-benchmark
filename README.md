@@ -42,6 +42,6 @@ Case 4. Random update:  502.580173ms
 Test options:
 
 ```rust
-const SIZE: usize = 100000;
+const COUNT: usize = 100000;
 const BLOCK_SIZE: usize = 64;
 ```
